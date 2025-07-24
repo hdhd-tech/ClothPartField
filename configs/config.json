@@ -1,0 +1,66 @@
+{
+    "pipeline_config": {
+        "model": {
+            "checkpoint": "/data/models/sam/checkpoint.pt",
+            "model_cfg": "configs/sam2.1/sam2.1_hiera_b+.yaml"
+        },
+        "rendering": {
+            "img_h": 1200,
+            "img_w": 800,
+            "focal": [20000, 20000],
+            "front_translation": [0.0, 1.0, 28.0],
+            "back_translation": [0.0, 1.0, -28.0],
+            "target_pos": [0.0, 1.0, 0.0]
+        },
+        "segmentation": {
+            "points_per_side": 32,
+            "pred_iou_thresh": 0.8,
+            "stability_score_thresh": 0.85,
+            "min_mask_area": 2000,
+            "confidence_threshold": 0.8
+        },
+        "merging": {
+            "collar_region_threshold": 0.8,
+            "seam_region_threshold": 0.6,
+            "prefer_front_for_collar": true,
+            "confidence_weighting": true
+        },
+        "visualization": {
+            "use_dynamic_colors": true,
+            "confidence_based_alpha": true,
+            "region_based_coloring": true
+        }
+    },
+    "file_paths": {
+        "input_obj": "shirt.obj",
+        "output_prefix": "dress_colored",
+        "overlay_prefix": "mask_overlay"
+    },
+    "regions": {
+        "collar": {
+            "y_threshold": 0.8,
+            "color": [0, 0, 255],
+            "priority": "front"
+        },
+        "main_body": {
+            "area_threshold": 50000,
+            "color": [255, 0, 0],
+            "priority": "both"
+        },
+        "sleeves": {
+            "area_threshold": 20000,
+            "color": [0, 255, 0],
+            "priority": "both"
+        },
+        "hem": {
+            "y_threshold": 0.2,
+            "color": [0, 255, 255],
+            "priority": "both"
+        },
+        "seams": {
+            "x_threshold": 0.4,
+            "color": [128, 0, 255],
+            "priority": "back"
+        }
+    }
+} 
