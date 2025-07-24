@@ -122,13 +122,6 @@ print("✔ 已保存 embedding_with_labels.npy")
 
 
 
-
-# ---------- ⑩ 上色并保存 PLY ----------
-# colors = (plt.get_cmap("tab20")(y_final % 20)[:, :3] * 255).astype(np.uint8)
-# colored_pcd = trimesh.points.PointCloud(points, colors=colors)
-# colored_pcd.export("cloth/dress_colored_pred.ply")
-
-# print("\n🎉 已保存上色文件: cloth/dress_colored_pred.ply")
 colors = (plt.get_cmap("tab20")(y_final % 20)[:, :3] * 255).astype(np.uint8)
 
 # 重新组装带颜色的网格
