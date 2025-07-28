@@ -165,7 +165,7 @@ def convert_path_coords_to_vertex_indices(vertices, path_coords, threshold=1e-6)
 
 def analyze_mesh(path):
     # 加载 mesh
-    mesh = trimesh.load(path, process=False)
+    mesh = trimesh.load(path, process=True)
 
     # 是否 watertight（闭合）
     print(f"🧵 is_watertight: {mesh.is_watertight}")
@@ -186,17 +186,33 @@ def analyze_mesh(path):
 
 
 # ---------- 配置 ----------
-LABEL_FILE = "vertex_labels_full.npy"
-MESH_FILE = "dress_colored_vert_qyt2.ply"
-SAVE_DIR = "label_submeshes"
-
-os.makedirs(SAVE_DIR, exist_ok=True)
+LABEL_FILE = "../outputs/labels/vertex_labels_full.npy"
+MESH_FILE = "../outputs/colored_meshes_outputs/dress_colored_vert.ply"
 
 # ---------- 加载数据 ----------
-vertex_labels = np.load(LABEL_FILE)
-mesh = trimesh.load(MESH_FILE, process=True) # (M, 3)
+
+# 先加载原始网格和标签
+mesh_raw = trimesh.load(MESH_FILE, process=False)
+vertex_labels_raw = np.load(LABEL_FILE)
+
+# 然后加载处理后的网格
+mesh = trimesh.load(MESH_FILE, process=True)
+
+# 找到处理后网格顶点与原始顶点的对应关系
+from scipy.spatial.distance import cdist
+distances = cdist(mesh.vertices, mesh_raw.vertices)
+closest_indices = np.argmin(distances, axis=1)
+
+# 根据对应关系调整标签
+vertex_labels = vertex_labels_raw[closest_indices]
+
+print(f"原始顶点数: {len(mesh_raw.vertices)}")
+print(f"处理后顶点数: {len(mesh.vertices)}")
+print(f"总label顶点数: {vertex_labels.shape[0]}")
+print(f"标签范围: {np.min(vertex_labels)} - {np.max(vertex_labels)}")
+print(f"唯一标签: {np.unique(vertex_labels)}")
 # 使用方法
-mesh, components = analyze_mesh(mesh)
+mesh, components = analyze_mesh(MESH_FILE)
 # ---------- 提取每个 label 的子网格 ----------
 label_set = np.unique(vertex_labels)
 label_submeshes = {}
