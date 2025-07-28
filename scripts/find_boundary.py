@@ -166,8 +166,8 @@ def process_all_labels_boundary(vertex_labels, faces, min_edge_count=5):
 
 
 
-LABEL_FILE = "outputs/labels/vertex_labels_full.npy"
-MESH_FILE = "outputs/colored_meshes_outputs/dress_colored_vert.ply"
+LABEL_FILE = "../outputs/labels/vertex_labels_full.npy"
+MESH_FILE = "../outputs/colored_meshes_outputs/dress_colored_vert.ply"
 SAVE_DIR = "outputs/tmp"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
