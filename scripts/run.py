@@ -7,9 +7,17 @@ import argparse
 from typing import Dict, List, Tuple, Optional
 import json
 from pathlib import Path
-
+import sys
+from pathlib import Path
+import os
+# 将项目根目录加入 sys.path
+project_root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(project_root))
+sam2_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sam2'))
+if sam2_path not in sys.path:
+    sys.path.insert(0, sam2_path)
 # Import local modules
-from render_utils import CameraSeed, MaskRenderer, HardRenderer
+from utils.render_utils import CameraSeed, MaskRenderer, HardRenderer
 from sam2.build_sam import build_sam2
 from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 
@@ -231,24 +239,35 @@ class ClothSegmentationPipeline:
             masks.extend(mask_vertices)
         print(f"🎨 Found {len(masks)} masks")
 
-        labels_expanded = np.zeros((vertices.shape[0], len(masks)), dtype=np.bool)
+        labels_expanded = np.zeros((vertices.shape[0], len(masks)), dtype=bool)
         for i, mask in enumerate(masks):
             labels_expanded[mask, i] = 1
 
         labels = np.ones(vertices.shape[0], dtype=np.int8) * -1
         _mask = labels_expanded.sum(axis=1) == 1
         labels[_mask] = np.argmax(labels_expanded[_mask], axis=1)
-        self.save_labels(labels, "labels.npy")
-        print(f"🎨 Saved labels to labels.npy")
+        # self.save_labels(labels, "labels.npy")
+        # print(f"🎨 Saved labels to labels.npy")
+        obj_basename = Path(obj_path).stem  # e.g., 'dress'
+    
+        # 可选：选择使用相对路径还是绝对路径
+        #out_dir = Path("/home/yang/ClothPartField/outputs/labels")  # 绝对路径
+        out_dir = Path(__file__).parent.parent / "outputs" / "labels"  # 相对路径
+
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / f"{obj_basename}_labels.npy"
+
+        self.save_labels(labels, str(out_path))
+        print(f"🎨 Saved labels to {out_path}")
 
 
 def main():
     """主函数"""
     parser = argparse.ArgumentParser(description="Improved Cloth Segmentation Pipeline")
-    parser.add_argument("--obj_path", type=str, default="shirt.obj", 
+    parser.add_argument("--obj_path", type=str, default="/home/yang/ClothPartField/data/meshes/dress.obj", 
                        help="Path to the OBJ file")
     parser.add_argument("--checkpoint", type=str, 
-                       default="/root/sam2/sam2_logs/configs/sam2.1_training/sam2.1_hiera_b+_CLOTH_finetune.yaml/checkpoints/checkpoint.pt",
+                       default="/data/models/sam/checkpoint_latest.pt",
                        help="Path to SAM2 checkpoint")
     parser.add_argument("--model_cfg", type=str, 
                        default="configs/sam2.1/sam2.1_hiera_b+.yaml",

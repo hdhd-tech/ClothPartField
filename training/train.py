@@ -7,13 +7,13 @@ import trimesh
 import matplotlib.pyplot as plt
 
 # ---------- ① 读取数据 ----------
-X_all = np.load("data/embeddings/shirt/part_feat_shirt_0_batch.npy")      # (N, D)
-y_all = np.load("data/labels/labels.npy")              # (N,)  -1 表示未标注
+X_all = np.load("../data/embeddings/part_feat_dress_0_batch.npy")      # (N, D)
+y_all = np.load("../outputs/labels/dress_labels.npy")              # (N,)  -1 表示未标注
 unique, counts = np.unique(y_all, return_counts=True)
 for u, c in zip(unique, counts):
     print(f"Label {u}: {c} samples")
-points = trimesh.load("data/meshes/shirt.obj")              # (N, 3)
-mesh = trimesh.load("data/meshes/shirt.obj", process=False)           # 保持原顺序
+points = trimesh.load("../data/meshes/dress.obj")              # (N, 3)
+mesh = trimesh.load("../data/meshes/dress.obj", process=False)           # 保持原顺序
 V = mesh.vertices                                         # (N, 3)
 F = mesh.faces                                            # (M, 3)
 points = V                                                # 直接把顶点当作 point cloud
@@ -114,10 +114,10 @@ y_unlab_pred     = le.inverse_transform(y_unlab_pred_enc)   # 反映射回原编
 # ---------- ⑨ 合并全部标签 ----------
 y_final = np.copy(y_all)
 y_final[mask_unlabeled] = y_unlab_pred
-np.save("outputs/labels/vertex_labels_full.npy", y_final.astype(np.int32))
+np.save("../outputs/labels/vertex_labels_full.npy", y_final.astype(np.int32))
 print("✔ 已保存 vertex_labels_full.npy")
 combined = np.concatenate([X_all, y_final.reshape(-1, 1)], axis=1)  # (N, D+1)
-np.save("outputs/labels/embeddings/embedding_with_labels.npy", combined)
+np.save("../outputs/labels/embeddings/embedding_with_labels.npy", combined)
 print("✔ 已保存 embedding_with_labels.npy")
 
 
@@ -130,6 +130,6 @@ mesh_colored = trimesh.Trimesh(vertices=V,
                                vertex_colors=colors,
                                process=True)
 
-mesh_colored.export("outputs/colored_meshes_outputs/dress_colored_vert.ply")
+mesh_colored.export("../outputs/colored_meshes_outputs/dress_colored_vert.ply")
 
 print("已保存: outputs/colored_meshes_outputs/dress_colored_vert.ply")
