@@ -4,12 +4,12 @@ import xmlrpc.client
 from pathlib import Path
 
 # 读取并 base64 编码参考图像
-ref_img_path = Path("dress.png")
+ref_img_path = Path("../debug/debug_masks/1_rendered.png")
 with open(ref_img_path, "rb") as f_img:
     reference_image = base64.b64encode(f_img.read()).decode("ascii")
     print(f"已加载reference_image")
 
-specification_path = Path("test_spec.json")
+specification_path = Path("../outputs/sim_json/test_spec.json")
 with open(specification_path, "r") as f_json:
     specification_json = json.load(f_json)
     print(f"已加载specification_json")
@@ -46,8 +46,8 @@ elif isinstance(result, (list, tuple)) and len(result) == 4:
     img_data = get_base64_bytes(sim_image)
     static_img_data = get_base64_bytes(static_image)
 
-    sim_image_path = Path("tests/sim_image.png")
-    static_image_path = Path("tests/static_image.png")
+    sim_image_path = Path("../outputs/sim_outputs/sim_image.png")
+    static_image_path = Path("../outputs/sim_outputs/static_image.png")
 
     with open(sim_image_path, "wb") as f_img:
         f_img.write(img_data)

@@ -20,7 +20,7 @@ def extract_colors(mesh: trimesh.Trimesh) -> np.ndarray:
     for i, vertices in enumerate(mesh.faces):
         color_counts = Counter()
         for vertex in vertices:
-            color = color_to_id[tuple(vertex_cxwolors[vertex])]
+            color = color_to_id[tuple(vertex_colors[vertex])]
             color_counts[color] += 1
         face_colors[i] = max(color_counts, key=color_counts.get)
 
@@ -215,12 +215,7 @@ def extract_largest_component(
     try:
         #largest_cc_mesh = simplify_boundary_topology(largest_cc_mesh)
         boundary_vertices, boundary_edges = extract_boundary(largest_cc_mesh)
-        
-        # Debug Panel 2 boundary result
-        if color_id == 2:
-            print(f"  After boundary extraction: {len(boundary_vertices)} vertices, {len(boundary_edges)} edges")
-            print(f"  Boundary vertices: {boundary_vertices[:10]}...")  # Show first 10
-            print(f"  Boundary edges: {boundary_edges[:10]}...")  # Show first 10
+
             
     except Exception as e:
         print(f"Warning: Boundary extraction failed for color {color_id}: {e}")
@@ -249,28 +244,8 @@ def build_boundary_color_mapping(
             v1 = kdtree.query(panel.mesh.vertices[edge[1]])[1]
             boundary_to_colors[(v0, v1)].append(panel.color_id)
             boundary_to_colors[(v1, v0)].append(panel.color_id)
-            
-            # Debug Panel 2's edges and see what other panels might share them
-            if panel.color_id == 2:
-                print(f"  Panel 2 edge {edge} -> global ({v0}, {v1})")
     
-    # Check what edges Panel 2 shares with others
-    print(f"\n=== Checking Panel 2 edge sharing ===")
-    panel2 = None
-    for panel in panels:
-        if panel.color_id == 2:
-            panel2 = panel
-            break
-    
-    if panel2:
-        for edge in panel2.boundary_edges:
-            v0 = kdtree.query(panel2.mesh.vertices[edge[0]])[1]
-            v1 = kdtree.query(panel2.mesh.vertices[edge[1]])[1]
-            colors_for_edge = boundary_to_colors[(v0, v1)]
-            print(f"  Global edge ({v0}, {v1}): colors {colors_for_edge}")
-
     return boundary_to_colors
-
 
 def compute_edge_labels(
     panels: List[ColorPanel], boundary_to_colors: defaultdict, kdtree: KDTree
@@ -286,16 +261,6 @@ def compute_edge_labels(
             v1 = kdtree.query(panel.mesh.vertices[edge[1]])[1]
             cand = set(boundary_to_colors[(v0, v1)]) - {panel.color_id}
             
-            # Debug Panel 2 edge details
-            if panel.color_id == 2:
-                v0_coord = panel.mesh.vertices[edge[0]]
-                v1_coord = panel.mesh.vertices[edge[1]]
-                dist0, idx0 = kdtree.query(v0_coord)
-                dist1, idx1 = kdtree.query(v1_coord)
-                print(f"  Edge {edge}: v0->global {idx0}(dist={dist0:.6f}), v1->global {idx1}(dist={dist1:.6f})")
-                print(f"    Available colors in boundary_to_colors: {boundary_to_colors[(v0, v1)]}")
-                print(f"    Candidates after removing self: {cand}")
-
             if len(cand) == 1:
                 color_adj.append(cand.pop())
             elif len(cand) == 0:
@@ -309,7 +274,7 @@ def compute_edge_labels(
     return edge_labels
 
 
-def process_mesh(mesh_path: str) -> Tuple[List[ColorPanel], List[List[int]], KDTree]:
+def process_mesh(mesh_path: str, min_faces_threshold: int = 15) -> Tuple[List[ColorPanel], List[List[int]], KDTree]:
     """Main processing pipeline for mesh segmentation."""
     mesh = trimesh.load(mesh_path, process=True)
     face_colors = extract_colors(mesh)
@@ -318,7 +283,11 @@ def process_mesh(mesh_path: str) -> Tuple[List[ColorPanel], List[List[int]], KDT
     # Extract panels for each color
     panels = []
     for color_id in range(max(face_colors) + 1):
+        color_face_count = np.sum(face_colors == color_id)
         print(f"Processing color {color_id}")
+        if color_face_count < min_faces_threshold:
+            print(f"  Skipping color {color_id}: only {color_face_count} faces (< {min_faces_threshold} threshold)")
+            continue
         panel = extract_largest_component(mesh, face_colors, color_id)
         if panel:
             panels.append(panel)
@@ -333,7 +302,7 @@ def process_mesh(mesh_path: str) -> Tuple[List[ColorPanel], List[List[int]], KDT
 def save_results(
     panels: List[ColorPanel],
     pairs: List,
-    output_dir: str = "../output",
+    output_dir: str = "../outputs",
 ):
     """Save results to files."""
     with open(f"{output_dir}/sewing_pairs/dress_colored_vert_b_sewing_pairs.txt", "w") as f:
@@ -380,10 +349,10 @@ def extract_boundary_fallback(mesh: trimesh.Trimesh) -> Tuple[List[int], List[Tu
 def main():
     """Main function with clear pipeline."""
     # Process mesh
-    panels, edge_labels, kdtree = process_mesh("../outputs/colored_vert/dress_colored_vert.ply")
+    panels, edge_labels, kdtree = process_mesh("../outputs/colored_meshes_outputs/dress_colored_vert.ply")
 
 
-    pairs = find_sewing_pairs(edge_labels, panels, kdtree, min_len=6)
+    pairs = find_sewing_pairs(edge_labels, panels, kdtree, min_len=10)
     print(f"Found {len(pairs)} sewing pairs: {pairs}")
 
     # Generate visualizations

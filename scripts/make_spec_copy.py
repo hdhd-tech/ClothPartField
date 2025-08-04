@@ -57,7 +57,7 @@ def load_data():
 
     # read sewing pairs
     sewing_pairs = []
-    sewing_file = f"{folder}/sewing_pairs/dress_colored_vert_b_sewing_pairs.txt"
+    sewing_file = f"{folder}/sewing_pairs/dress_colored_vert_b_sewing_pairs_final.txt"
     if not os.path.exists(sewing_file):
         print(f"Warning: Sewing pairs file {sewing_file} does not exist")
         return panels, sewing_pairs
@@ -72,6 +72,44 @@ def load_data():
             print(f"Error parsing sewing pair line {line_num}: {e}")
     
     print(f"Total sewing pairs: {len(sewing_pairs)}")
+        # ===⇩⇩⇩ 在这里插入 Panel 4 翻转逻辑 ⇩⇩⇩===
+    # for panel in panels:
+    #     if panel.color_id == 4:
+    #         print("⚙️  Flipping Panel 4 coordinates (X-mirror) and reversing boundary order")
+    #         # 1) X 轴镜像 (x → -x)
+    #         panel.mesh.vertices[:, 0] *= -1
+    #         # 2) 反转环顺序，使 CW/CCW 保持一致
+    #         panel.boundary_vertices = panel.boundary_vertices[::-1]
+    #         # 3) 若保存了有向边，可同时调换每条边的方向
+    #         if panel.boundary_edges.ndim == 2 and panel.boundary_edges.shape[1] == 2:
+    #             panel.boundary_edges = panel.boundary_edges[:, ::-1]
+       
+    # flipped_ids = {4}                     # 你实际翻转的 color_id
+    # id2panel = {p.color_id: p for p in panels}
+
+    # # 同步修正 sewing_pairs
+    # for k, (seg0, seg1) in enumerate(sewing_pairs):
+    #     new_pair = []
+    #     for pid, s_idx, e_idx, rev_flag in (seg0, seg1):
+    #         if pid in flipped_ids:
+    #             n = len(id2panel[pid].boundary_vertices)
+
+    #             # === 1) 翻转索引 ===
+    #             s_new = (n - 1 - s_idx) % n
+    #             e_new = (n - 1 - e_idx) % n
+    #             rev_new = not rev_flag          # 翻环 → reverse 先取反
+
+    #             # === 2) 若顺时针段 > 半圈，则改用逆时针短段 ===
+    #             seg_len = (e_new - s_new) % n   # 顺时针顶点数
+    #             if seg_len > n // 2:            # 说明选到长边
+    #                 s_new, e_new = e_new, s_new # 换成逆时针
+    #                 rev_new = not rev_new       # 方向再翻一次
+
+    #             new_pair.append((pid, s_new, e_new, rev_new))
+    #         else:
+    #             new_pair.append((pid, s_idx, e_idx, rev_flag))
+
+    #     sewing_pairs[k] = tuple(new_pair)
     return panels, sewing_pairs
     
 

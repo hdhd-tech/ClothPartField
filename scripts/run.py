@@ -264,7 +264,7 @@ class ClothSegmentationPipeline:
 def main():
     """主函数"""
     parser = argparse.ArgumentParser(description="Improved Cloth Segmentation Pipeline")
-    parser.add_argument("--obj_path", type=str, default="/home/yang/ClothPartField/data/meshes/dress.obj", 
+    parser.add_argument("--obj_path", type=str, default="/home/yang/ClothPartField/data/meshes/newDress.obj", 
                        help="Path to the OBJ file")
     parser.add_argument("--checkpoint", type=str, 
                        default="/data/models/sam/checkpoint_latest.pt",
